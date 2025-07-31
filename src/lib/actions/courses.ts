@@ -27,18 +27,27 @@ export async function getCourses(): Promise<Course[]> {
     .select('course_id, count:id.count()')
     .in('course_id', courseIds)
 
-  const { data: videoCounts } = await supabase
-    .from('videos')
-    .select('sections!inner(course_id), count:id.count()')
-    .in('sections.course_id', courseIds)
+  // 各コースの動画数を取得するため、sectionsテーブル経由でクエリ
+  const { data: videoCountsData } = await supabase
+    .from('sections')
+    .select(`
+      course_id,
+      videos(count)
+    `)
+    .in('course_id', courseIds)
 
   // カウントをマッピング
   const sectionCountMap = new Map(
     sectionCounts?.map(s => [s.course_id, s.count]) || []
   )
-  const videoCountMap = new Map(
-    videoCounts?.map((v: any) => [v.sections?.course_id, v.count]) || []
-  )
+  
+  // 動画数を集計
+  const videoCountMap = new Map<string, number>()
+  videoCountsData?.forEach(section => {
+    const currentCount = videoCountMap.get(section.course_id) || 0
+    const videoCount = Array.isArray(section.videos) ? section.videos.length : 0
+    videoCountMap.set(section.course_id, currentCount + videoCount)
+  })
 
   return courses.map(course => ({
     ...course,

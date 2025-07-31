@@ -20,6 +20,14 @@ export default async function Header() {
               </span>
             </Link>
 
+            {/* All Courses Link */}
+            <Link
+              href="/courses"
+              className="hidden lg:block px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400"
+            >
+              講座一覧
+            </Link>
+
             {/* Categories Dropdown */}
             <div className="hidden lg:block relative group">
               <button className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:text-purple-600 dark:hover:text-purple-400">

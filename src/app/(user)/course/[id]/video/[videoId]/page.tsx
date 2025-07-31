@@ -4,6 +4,7 @@ import { getCourseWithSectionsAndVideos } from '@/lib/actions/courses'
 import { getUser } from '@/lib/auth/get-user'
 import VideoPlayer from '@/components/video/VideoPlayer'
 import VideoProgress from '@/components/video/VideoProgress'
+import VideoSidebar from '@/components/video/VideoSidebar'
 import type { Section, Video, CourseWithSections } from '@/types/course'
 
 export default async function VideoPage({
@@ -60,42 +61,44 @@ export default async function VideoPage({
 
   return (
     <div className="min-h-screen bg-gray-900">
-      <div className="flex h-screen">
+      <div className="flex flex-col lg:flex-row lg:h-screen">
         {/* Main Content */}
-        <div className="flex-1 flex flex-col">
+        <div className="flex-1 flex flex-col order-2 lg:order-1">
           {/* Video Header */}
-          <div className="bg-gray-800 border-b border-gray-700 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+          <div className="bg-gray-800 border-b border-gray-700 px-4 lg:px-6 py-3 lg:py-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div className="flex items-center space-x-3 lg:space-x-4">
                 <Link
                   href={`/course/${id}`}
-                  className="text-gray-400 hover:text-white transition"
+                  className="text-gray-400 hover:text-white transition flex-shrink-0"
                 >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 lg:w-6 lg:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
                   </svg>
                 </Link>
-                <div>
-                  <h1 className="text-xl font-semibold text-white">{currentVideo.title}</h1>
-                  <p className="text-sm text-gray-400">{course.title}</p>
+                <div className="min-w-0">
+                  <h1 className="text-base lg:text-xl font-semibold text-white truncate">{currentVideo.title}</h1>
+                  <p className="text-xs lg:text-sm text-gray-400 truncate">{course.title}</p>
                 </div>
               </div>
               
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 lg:space-x-4">
                 {prevVideo && (
                   <Link
                     href={`/course/${id}/video/${prevVideo.id}`}
-                    className="px-4 py-2 bg-gray-700 text-white rounded hover:bg-gray-600 transition"
+                    className="px-3 py-1.5 lg:px-4 lg:py-2 bg-gray-700 text-white text-sm lg:text-base rounded hover:bg-gray-600 transition"
                   >
-                    前の動画
+                    <span className="hidden sm:inline">前の動画</span>
+                    <span className="sm:hidden">前へ</span>
                   </Link>
                 )}
                 {nextVideo && (
                   <Link
                     href={`/course/${id}/video/${nextVideo.id}`}
-                    className="px-4 py-2 bg-purple-600 text-white rounded hover:bg-purple-700 transition"
+                    className="px-3 py-1.5 lg:px-4 lg:py-2 bg-purple-600 text-white text-sm lg:text-base rounded hover:bg-purple-700 transition"
                   >
-                    次の動画
+                    <span className="hidden sm:inline">次の動画</span>
+                    <span className="sm:hidden">次へ</span>
                   </Link>
                 )}
               </div>
@@ -103,86 +106,36 @@ export default async function VideoPage({
           </div>
 
           {/* Video Player */}
-          <div className="flex-1 bg-black flex items-center justify-center">
+          <div className="flex-1 bg-black flex items-center justify-center aspect-video lg:aspect-auto">
             {youtubeId ? (
               <VideoPlayer videoId={youtubeId} />
             ) : (
-              <div className="text-white text-center">
-                <svg className="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="text-white text-center p-4">
+                <svg className="w-12 h-12 lg:w-16 lg:h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
                 </svg>
-                <p>動画を読み込めませんでした</p>
+                <p className="text-sm lg:text-base">動画を読み込めませんでした</p>
               </div>
             )}
           </div>
 
           {/* Video Controls */}
           {user && (
-            <div className="bg-gray-800 border-t border-gray-700 px-6 py-4">
+            <div className="bg-gray-800 border-t border-gray-700 px-4 lg:px-6 py-3 lg:py-4">
               <VideoProgress videoId={currentVideo.id} />
             </div>
           )}
         </div>
 
         {/* Sidebar - Course Content */}
-        <div className="w-96 bg-gray-800 border-l border-gray-700 overflow-y-auto">
-          <div className="p-4 border-b border-gray-700">
-            <h2 className="text-lg font-semibold text-white">講座内容</h2>
-            <p className="text-sm text-gray-400 mt-1">
-              {videoIndex + 1} / {totalVideos} 完了
-            </p>
-          </div>
-
-          <div className="p-4 space-y-4">
-            {course.sections.map((section) => (
-              <div key={section.id}>
-                <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                  {section.title}
-                </h3>
-                <div className="space-y-1">
-                  {section.videos.map((video) => {
-                    const isActive = video.id === videoId
-                    const canAccess = video.is_free || user
-
-                    return (
-                      <Link
-                        key={video.id}
-                        href={canAccess ? `/course/${id}/video/${video.id}` : '/login'}
-                        className={`
-                          block px-3 py-2 rounded text-sm transition
-                          ${isActive 
-                            ? 'bg-gray-700 text-white' 
-                            : canAccess
-                              ? 'text-gray-300 hover:bg-gray-700 hover:text-white'
-                              : 'text-gray-500 cursor-not-allowed'
-                          }
-                        `}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-2 flex-1">
-                            <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <span className="truncate">{video.title}</span>
-                          </div>
-                          <span className="text-xs text-gray-500 ml-2">
-                            {Math.floor((video.duration || 600) / 60)}:{String((video.duration || 600) % 60).padStart(2, '0')}
-                          </span>
-                        </div>
-                        {video.is_free && (
-                          <span className="inline-block mt-1 px-2 py-0.5 text-xs text-green-400 bg-green-900/50 rounded">
-                            無料
-                          </span>
-                        )}
-                      </Link>
-                    )
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <VideoSidebar 
+          course={course}
+          currentVideoId={videoId}
+          courseId={id}
+          videoIndex={videoIndex}
+          totalVideos={totalVideos}
+          user={user}
+        />
       </div>
     </div>
   )

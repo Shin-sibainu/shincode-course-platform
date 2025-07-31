@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { getCourseWithSectionsAndVideos } from '@/lib/actions/courses'
 import { getUser } from '@/lib/auth/get-user'
 import type { Section, Video, CourseWithSections } from '@/types/course'
@@ -163,11 +164,15 @@ export default async function CoursePage({
           <div className="lg:col-span-1">
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 sticky top-24">
               {course.thumbnail_url && (
-                <img
-                  src={course.thumbnail_url}
-                  alt={course.title}
-                  className="w-full rounded-lg mb-6"
-                />
+                <div className="relative w-full aspect-video mb-6">
+                  <Image
+                    src={course.thumbnail_url}
+                    alt={course.title}
+                    fill
+                    className="rounded-lg object-cover"
+                    sizes="(max-width: 1024px) 100vw, 300px"
+                  />
+                </div>
               )}
               
               <div className="space-y-4 mb-6">

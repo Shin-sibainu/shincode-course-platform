@@ -25,66 +25,131 @@ export async function getUserProgress(): Promise<UserProgress[]> {
 export async function getUserCourseProgress(userId: string): Promise<(Course & { progress: number; completedVideos: number; totalVideos: number })[]> {
   const supabase = await createClient()
 
-  // 受講中の講座とその進捗を効率的に取得
-  const { data, error } = await supabase
+  // まず、ユーザーが進捗を持つ講座のIDを取得
+  const { data: progressData, error: progressError } = await supabase
     .from('user_progress')
-    .select(`
-      *,
-      videos!inner (
-        id,
-        title,
-        sections!inner (
-          id,
-          title,
-          order_index,
-          courses!inner (
-            id,
-            title,
-            description,
-            thumbnail_url
-          )
-        )
-      )
-    `)
+    .select('video_id, completed, videos!inner(section_id, sections!inner(course_id))')
     .eq('user_id', userId)
-    .order('created_at', { ascending: false })
 
-  if (error) {
-    console.error('Error fetching user course progress:', error)
+  if (progressError) {
+    console.error('Error fetching user progress:', progressError)
     return []
   }
 
-  // 講座ごとにグループ化して進捗を計算
-  const courseProgressMap = new Map()
-  
-  data?.forEach(progress => {
-    const course = progress.videos.sections.courses
-    const courseId = course.id
+  // 進捗がある講座のIDを収集
+  const courseIds = new Set<string>()
+  const courseProgressMap = new Map<string, { completed: number }>()
+
+  progressData?.forEach(progress => {
+    const courseId = progress.videos.sections.course_id
+    courseIds.add(courseId)
     
     if (!courseProgressMap.has(courseId)) {
-      courseProgressMap.set(courseId, {
-        course,
-        progressRecords: [],
-        completedCount: 0,
-        totalCount: 0
-      })
+      courseProgressMap.set(courseId, { completed: 0 })
     }
     
-    const courseData = courseProgressMap.get(courseId)
-    courseData.progressRecords.push(progress)
-    courseData.totalCount++
     if (progress.completed) {
-      courseData.completedCount++
+      const data = courseProgressMap.get(courseId)!
+      data.completed++
     }
   })
 
-  // 進捗率を計算して返す
-  return Array.from(courseProgressMap.values()).map(({ course, completedCount, totalCount }) => ({
-    ...course,
-    progress: totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0,
-    completedVideos: completedCount,
-    totalVideos: totalCount
-  }))
+  if (courseIds.size === 0) {
+    return []
+  }
+
+  // 進捗がある講座の完全な情報を取得（全動画数を含む）
+  const { data: coursesData, error: coursesError } = await supabase
+    .from('courses')
+    .select(`
+      id,
+      title,
+      description,
+      thumbnail_url,
+      sections!inner(
+        id,
+        videos!inner(
+          id
+        )
+      )
+    `)
+    .in('id', Array.from(courseIds))
+
+  if (coursesError) {
+    console.error('Error fetching courses data:', coursesError)
+    return []
+  }
+
+  // 各講座の進捗情報を構築
+  return coursesData.map(course => {
+    // 講座内の全動画数を計算
+    const totalVideos = course.sections.reduce((total: number, section: any) => 
+      total + section.videos.length, 0
+    )
+    
+    // 完了した動画数を取得
+    const completedVideos = courseProgressMap.get(course.id)?.completed || 0
+    
+    // 進捗率を計算
+    const progress = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 100) : 0
+
+    return {
+      id: course.id,
+      title: course.title,
+      description: course.description,
+      thumbnail_url: course.thumbnail_url,
+      progress,
+      completedVideos,
+      totalVideos
+    }
+  })
+}
+
+export async function getCourseProgress(courseId: string, userId: string): Promise<{ progress: number; completedVideos: number; totalVideos: number }> {
+  const supabase = await createClient()
+
+  // 講座の全動画数を取得
+  const { data: courseData, error: courseError } = await supabase
+    .from('courses')
+    .select(`
+      sections!inner(
+        videos!inner(
+          id
+        )
+      )
+    `)
+    .eq('id', courseId)
+    .single()
+
+  if (courseError || !courseData) {
+    console.error('Error fetching course data:', courseError)
+    return { progress: 0, completedVideos: 0, totalVideos: 0 }
+  }
+
+  // 全動画数を計算
+  const totalVideos = courseData.sections.reduce((total: number, section: any) => 
+    total + section.videos.length, 0
+  )
+
+  // ユーザーの進捗を取得
+  const { data: progressData, error: progressError } = await supabase
+    .from('user_progress')
+    .select('completed, videos!inner(sections!inner(course_id))')
+    .eq('user_id', userId)
+    .eq('videos.sections.course_id', courseId)
+
+  if (progressError) {
+    console.error('Error fetching user progress:', progressError)
+    return { progress: 0, completedVideos: 0, totalVideos }
+  }
+
+  // 完了した動画数を計算
+  const completedVideos = progressData?.filter(p => p.completed).length || 0
+  
+  // 進捗率を計算
+  const progress = totalVideos > 0 ? Math.round((completedVideos / totalVideos) * 100) : 0
+
+  return { progress, completedVideos, totalVideos }
 }
 
 export async function getVideoProgress(videoId: string): Promise<UserProgress | null> {

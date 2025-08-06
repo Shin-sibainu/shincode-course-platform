@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getCourseWithSectionsAndVideos } from '@/lib/actions/courses'
+import { getCourseProgress } from '@/lib/actions/progress'
 import { getUser } from '@/lib/auth/get-user'
 import type { Section, Video, CourseWithSections } from '@/types/course'
 
@@ -17,6 +18,9 @@ export default async function CoursePage({
   if (!course) {
     notFound()
   }
+
+  // ユーザーの進捗を取得
+  const progressData = user ? await getCourseProgress(id, user.id) : null
 
   const totalVideos = course.sections.reduce((acc: number, section: Section & { videos: Video[] }) => acc + section.videos.length, 0)
   const freeVideos = course.sections.reduce((acc: number, section: Section & { videos: Video[] }) => 
@@ -175,6 +179,25 @@ export default async function CoursePage({
                 </div>
               )}
               
+              {/* 進捗率表示 */}
+              {user && progressData && (
+                <div className="mb-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="text-sm font-medium text-purple-700 dark:text-purple-300">学習進捗</span>
+                    <span className="text-sm font-bold text-purple-700 dark:text-purple-300">{progressData.progress}%</span>
+                  </div>
+                  <div className="w-full bg-purple-200 dark:bg-purple-700 rounded-full h-2">
+                    <div
+                      className="bg-purple-600 dark:bg-purple-400 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${progressData.progress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-purple-600 dark:text-purple-400 mt-2">
+                    {progressData.completedVideos} / {progressData.totalVideos} 動画完了
+                  </p>
+                </div>
+              )}
+
               <div className="space-y-4 mb-6">
                 <div className="text-3xl font-bold text-gray-900 dark:text-white">
                   ¥12,800

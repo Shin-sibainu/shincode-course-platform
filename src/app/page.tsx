@@ -70,7 +70,7 @@ export default async function Home() {
             <div className="hidden lg:block relative h-96">
               <div className="absolute inset-0 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg"></div>
               <Image
-                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop"
+                src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=600&h=400&fit=crop&auto=format&q=75"
                 alt="学習イメージ"
                 fill
                 className="object-cover rounded-lg shadow-xl"
@@ -149,7 +149,7 @@ export default async function Home() {
             </div>
           ) : (
             <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {featuredCourses.map((course) => (
+              {featuredCourses.map((course, index) => (
               <Link
                 key={course.id}
                 href={`/course/${course.id}`}
@@ -157,11 +157,12 @@ export default async function Home() {
               >
                 <div className="relative aspect-video">
                   <Image
-                    src={course.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=225&fit=crop'}
+                    src={course.thumbnail_url || 'https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=400&h=225&fit=crop&auto=format&q=75'}
                     alt={course.title}
                     fill
                     className="object-cover"
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
+                    priority={index < 4}
                   />
                   {course.isBestseller && (
                     <span className="absolute top-2 left-2 px-2 py-1 bg-yellow-400 text-black text-xs font-bold rounded">

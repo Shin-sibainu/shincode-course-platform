@@ -1,13 +1,15 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Course } from '@/types/course'
+import { memo } from 'react'
 
 interface CourseCardProps {
   course: Course
   progress?: number
+  priority?: boolean
 }
 
-export default function CourseCard({ course, progress }: CourseCardProps) {
+const CourseCard = memo(function CourseCard({ course, progress, priority = false }: CourseCardProps) {
   return (
     <Link href={`/course/${course.id}`}>
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm overflow-hidden hover:shadow-lg transition-shadow cursor-pointer">
@@ -19,7 +21,8 @@ export default function CourseCard({ course, progress }: CourseCardProps) {
               fill
               className="object-cover"
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              loading="lazy"
+              loading={priority ? "eager" : "lazy"}
+              priority={priority}
             />
           ) : (
             <div className="absolute inset-0 flex items-center justify-center">
@@ -73,4 +76,6 @@ export default function CourseCard({ course, progress }: CourseCardProps) {
       </div>
     </Link>
   )
-}
+})
+
+export default CourseCard

@@ -1,6 +1,18 @@
 import Link from 'next/link'
 import { getCourses } from '@/lib/actions/courses'
-import CourseTableRow from '@/components/admin/course-table-row'
+import dynamic from 'next/dynamic'
+
+const CourseTableRow = dynamic(() => import('@/components/admin/course-table-row'), {
+  loading: () => (
+    <tr className="animate-pulse">
+      <td className="px-6 py-4"><div className="h-4 bg-gray-300 rounded w-48"></div></td>
+      <td className="px-6 py-4"><div className="h-4 bg-gray-300 rounded w-16"></div></td>
+      <td className="px-6 py-4"><div className="h-4 bg-gray-300 rounded w-16"></div></td>
+      <td className="px-6 py-4"><div className="h-4 bg-gray-300 rounded w-24"></div></td>
+      <td className="px-6 py-4"><div className="h-4 bg-gray-300 rounded w-20"></div></td>
+    </tr>
+  )
+})
 
 export default async function AdminCoursesPage() {
   const courses = await getCourses()

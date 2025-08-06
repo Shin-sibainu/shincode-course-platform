@@ -18,14 +18,45 @@
       "Bash(git rm:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(git reset:*)"
+      "Bash(git reset:*)",
+      "Bash(ls:*)",
+      "mcp__serena__activate_project",
+      "mcp__serena__check_onboarding_performed",
+      "mcp__serena__onboarding",
+      "mcp__serena__list_dir",
+      "mcp__serena__get_symbols_overview",
+      "mcp__serena__think_about_collected_information",
+      "mcp__serena__write_memory",
+      "mcp__serena__think_about_whether_you_are_done",
+      "mcp__serena__search_for_pattern",
+      "mcp__serena__think_about_task_adherence",
+      "Bash(npm run build:*)",
+      "mcp__github__create_issue",
+      "Bash(gh issue create:*)",
+      "Bash(gh repo list:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   },
+  "enableAllProjectMcpServers": true,
   "enabledMcpjsonServers": [
     "notionApi",
     "supabase",
     "github",
-    "playwright"
-  ]
+    "playwright",
+    "serena"
+  ],
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "powershell -c \"(New-Object Media.SoundPlayer 'C:\\Windows\\Media\\Windows Balloon.wav').PlaySync()\""
+          }
+        ]
+      }
+    ]
+  }
 }

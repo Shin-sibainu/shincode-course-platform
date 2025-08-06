@@ -1,4 +1,18 @@
-import CourseForm from '@/components/admin/course-form'
+import dynamic from 'next/dynamic'
+
+const CourseForm = dynamic(() => import('@/components/admin/course-form'), {
+  loading: () => (
+    <div className="animate-pulse space-y-6">
+      <div className="h-4 bg-gray-300 rounded w-24"></div>
+      <div className="h-10 bg-gray-300 rounded"></div>
+      <div className="h-4 bg-gray-300 rounded w-24"></div>
+      <div className="h-24 bg-gray-300 rounded"></div>
+      <div className="h-4 bg-gray-300 rounded w-24"></div>
+      <div className="h-10 bg-gray-300 rounded"></div>
+      <div className="h-10 bg-purple-300 rounded w-32"></div>
+    </div>
+  )
+})
 
 export default function NewCoursePage() {
   return (

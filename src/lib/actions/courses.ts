@@ -7,7 +7,7 @@ export async function getCourses(): Promise<Course[]> {
   // コースとセクション数、動画数を1つのクエリで取得
   const { data: courses, error } = await supabase
     .from('courses')
-    .select('*')
+    .select('id, title, description, thumbnail_url, created_at, updated_at')
     .order('created_at', { ascending: false })
 
   if (error) {
@@ -61,7 +61,7 @@ export async function getCourseById(id: string): Promise<Course | null> {
 
   const { data, error } = await supabase
     .from('courses')
-    .select('*')
+    .select('id, title, description, thumbnail_url, created_at, updated_at')
     .eq('id', id)
     .single()
 
@@ -78,7 +78,7 @@ export async function getCourseSections(courseId: string): Promise<Section[]> {
 
   const { data, error } = await supabase
     .from('sections')
-    .select('*')
+    .select('id, course_id, title, order_index, created_at, updated_at')
     .eq('course_id', courseId)
     .order('order_index', { ascending: true })
 
@@ -95,7 +95,7 @@ export async function getSectionVideos(sectionId: string): Promise<Video[]> {
 
   const { data, error } = await supabase
     .from('videos')
-    .select('*')
+    .select('id, section_id, title, youtube_url, duration, order_index, is_free, created_at, updated_at')
     .eq('section_id', sectionId)
     .order('order_index', { ascending: true })
 
@@ -114,10 +114,10 @@ export async function getCourseWithSectionsAndVideos(courseId: string) {
   const { data: course, error } = await supabase
     .from('courses')
     .select(`
-      *,
+      id, title, description, thumbnail_url, created_at, updated_at,
       sections (
-        *,
-        videos (*)
+        id, course_id, title, order_index, created_at, updated_at,
+        videos (id, section_id, title, youtube_url, duration, order_index, is_free, created_at, updated_at)
       )
     `)
     .eq('id', courseId)

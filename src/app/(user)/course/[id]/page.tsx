@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
 import { getCourseWithSectionsAndVideos } from '@/lib/actions/courses'
+import { getCourseProgress } from '@/lib/actions/progress'
 import { getUser } from '@/lib/auth/get-user'
 import type { Section, Video, CourseWithSections } from '@/types/course'
 
@@ -22,6 +23,9 @@ export default async function CoursePage({
   const freeVideos = course.sections.reduce((acc: number, section: Section & { videos: Video[] }) => 
     acc + section.videos.filter((v: Video) => v.is_free).length, 0
   )
+
+  // ユーザーがログインしている場合は進捗を取得
+  const courseProgress = user ? await getCourseProgress(id, user.id) : null
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -67,6 +71,29 @@ export default async function CoursePage({
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2">
+            {/* Course Progress (only show for logged in users) */}
+            {user && courseProgress && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-8">
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+                  学習進捗
+                </h2>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                    進捗率: {courseProgress.progress}%
+                  </span>
+                  <span className="text-sm text-gray-600 dark:text-gray-400">
+                    {courseProgress.completedVideos} / {courseProgress.totalVideos} 動画完了
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                  <div
+                    className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all duration-300"
+                    style={{ width: `${courseProgress.progress}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
             {/* What you'll learn */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-6 mb-8">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">

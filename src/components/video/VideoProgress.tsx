@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 interface VideoProgressProps {
@@ -9,35 +9,68 @@ interface VideoProgressProps {
 
 export default function VideoProgress({ videoId }: VideoProgressProps) {
   const [isCompleted, setIsCompleted] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
   const supabase = createClient()
 
+  // Load initial progress state
+  useEffect(() => {
+    const loadProgress = async () => {
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) {
+          setIsLoading(false)
+          return
+        }
+
+        const { data: progress } = await supabase
+          .from('user_progress')
+          .select('completed')
+          .eq('user_id', user.id)
+          .eq('video_id', videoId)
+          .single()
+
+        if (progress) {
+          setIsCompleted(progress.completed)
+        }
+      } catch (error) {
+        console.error('Error loading progress:', error)
+      } finally {
+        setIsLoading(false)
+      }
+    }
+
+    loadProgress()
+  }, [videoId, supabase])
+
   const handleToggleComplete = async () => {
+    if (isLoading) return
+    
     setIsLoading(true)
     try {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
 
-      if (isCompleted) {
-        // Mark as incomplete
-        await supabase
-          .from('user_progress')
-          .update({ completed: false, completed_at: null })
-          .eq('user_id', user.id)
-          .eq('video_id', videoId)
-      } else {
-        // Mark as complete
-        await supabase
-          .from('user_progress')
-          .upsert({
-            user_id: user.id,
-            video_id: videoId,
-            completed: true,
-            completed_at: new Date().toISOString()
-          })
+      const newCompletedState = !isCompleted
+
+      // Always use upsert to handle both cases
+      const { error } = await supabase
+        .from('user_progress')
+        .upsert({
+          user_id: user.id,
+          video_id: videoId,
+          completed: newCompletedState,
+          completed_at: newCompletedState ? new Date().toISOString() : null
+        })
+
+      if (error) {
+        console.error('Error updating progress:', error)
+        return
       }
 
-      setIsCompleted(!isCompleted)
+      setIsCompleted(newCompletedState)
+      
+      // Force page refresh to update progress display
+      window.location.reload()
     } catch (error) {
       console.error('Error updating progress:', error)
     } finally {
